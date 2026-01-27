@@ -1,19 +1,8 @@
 import { motion } from "framer-motion"
 import { Moon, Sun, Download } from "lucide-react"
-import { useState, useEffect } from "react"
 import profile from "../../assets/profile.jpg"
 
 const Nav = ({ dark, setDark, onDownloadResume }) => {
-  const [isScrolling, setIsScrolling] = useState(false)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolling(window.scrollY > 50)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
   const navItems = [
     { label: "About", id: "about" },
     { label: "Skills", id: "skills" },
@@ -32,9 +21,9 @@ const Nav = ({ dark, setDark, onDownloadResume }) => {
     >
       <div className="w-full px-6 py-3 flex items-center justify-between">
 
-        {/* LEFT: Profile Image & Name */}
+        {/* LEFT: Profile Image */}
         <motion.div
-          className="flex items-center shrink-0 gap-3"
+          className="flex items-center shrink-0"
           whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 400 }}
         >
@@ -43,15 +32,6 @@ const Nav = ({ dark, setDark, onDownloadResume }) => {
             alt="Profile"
             className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-700"
           />
-          <motion.span
-            initial={{ opacity: 1 }}
-            animate={{ opacity: isScrolling ? 0 : 1 }}
-            transition={{ duration: 0.3 }}
-            className="text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap hidden sm:inline"
-            style={{ pointerEvents: "none" }}
-          >
-            P. Lakshmi Tarun
-          </motion.span>
         </motion.div>
 
         {/* RIGHT: Links + Icons */}

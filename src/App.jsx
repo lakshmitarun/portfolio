@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import Nav from "./components/nav/nav"
+import Introduction from "./components/introduction"
 import About from "./components/about"
 import Skills from "./components/skills"
 import LeetCode from "./components/leetcode"
@@ -146,6 +147,7 @@ function App() {
       <Nav dark={dark} setDark={setDark} onDownloadResume={() => generateResumePDF(resumeData)} />
 
       <main className="pt-24">
+        <Introduction dark={dark} />
         <About dark={dark} />
         <Skills dark={dark} />
         <LeetCode dark={dark} />
