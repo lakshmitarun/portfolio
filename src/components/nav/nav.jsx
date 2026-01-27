@@ -4,6 +4,7 @@ import profile from "../../assets/profile.jpg"
 
 const Nav = ({ dark, setDark, onDownloadResume }) => {
   const navItems = [
+    { label: "Home", id: "home" },
     { label: "About", id: "about" },
     { label: "Skills", id: "skills" },
     { label: "LeetCode", id: "leetcode" },
