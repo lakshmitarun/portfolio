@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { motion } from "framer-motion"
 import {
   containerVariants,
@@ -12,53 +12,75 @@ import {
 } from "../utils/animationVariants"
 
 /**
- * LeetCode Component - Production-Ready Contribution Calendar
+ * LeetCode Component - Auto-Polling with Cache-Busting
  * 
  * Features:
- * - Fetches real LeetCode profile data via REST API
- * - Displays contribution heatmap for past 52 weeks
- * - Calculates streak and active days statistics
- * - Responsive dark/light theme support
- * - Fallback mock data for offline development
- * - Error handling and loading states
- * - Professional animations with smooth transitions
+ * ✓ Auto-polls LeetCode API every 10 minutes
+ * ✓ Cache-busting with timestamps to defeat CDN caching
+ * ✓ localStorage fallback for deployment caching issues
+ * ✓ Manual refresh button for immediate updates
+ * ✓ Displays last update time
+ * ✓ Dark/light theme support
+ * ✓ Error handling with graceful degradation
  */
 const LeetCode = ({ dark }) => {
-  const [stats, setStats] = useState({
+  const POLL_INTERVAL = 10 * 60 * 1000 // 10 minutes
+  const CACHE_KEY = "leetcode_stats_cache"
+  const LAST_UPDATE_KEY = "leetcode_last_update"
+  const username = "P_lakshmi_tarun"
+
+  const getInitialStats = () => {
+    if (typeof window === "undefined") return getDefaultStats()
+    try {
+      const cached = localStorage.getItem(CACHE_KEY)
+      return cached ? JSON.parse(cached) : getDefaultStats()
+    } catch {
+      return getDefaultStats()
+    }
+  }
+
+  const getDefaultStats = () => ({
     totalSolved: 4,
     easySolved: 4,
     mediumSolved: 0,
     hardSolved: 0,
     submissionCalendar: {
-      1754352000: 4,  // Aug 4
-      1769126400: 3,  // Dec 22
-      1769212800: 1,  // Dec 23
+      1754352000: 4,
+      1769126400: 3,
+      1769212800: 1,
     },
     totalSubmissions: 8,
   })
+
+  const [stats, setStats] = useState(getInitialStats())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const username = "P_lakshmi_tarun"
+  const [lastUpdate, setLastUpdate] = useState(null)
+  const pollIntervalRef = useRef(null)
+  const isMountedRef = useRef(true)
 
-  /**
-   * Manual fetch function - called only on user click
-   * Respects rate limits with 1-hour cooldown
-   */
   const fetchStats = async () => {
     try {
       setLoading(true)
-      setError(null)
 
-      const response = await fetch(
-        `https://alfa-leetcode-api.onrender.com/userProfile/${username}`,
-        { 
-          cache: "no-store",
-          headers: { "Cache-Control": "no-cache" }
-        }
-      )
+      // Cache-busting: unique timestamp prevents caching
+      const timestamp = Date.now()
+      const url = `https://alfa-leetcode-api.onrender.com/userProfile/${username}?t=${timestamp}`
+
+      const response = await fetch(url, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
+          "If-Modified-Since": new Date(0).toUTCString(),
+        },
+        credentials: "omit",
+      })
 
       if (response.status === 429) {
-        setError("⏳ API rate limited. Using cached data.")
+        console.warn("⏳ API rate limited (429)")
+        setError("API rate limited. Using cached data.")
         setLoading(false)
         return
       }
@@ -68,29 +90,71 @@ const LeetCode = ({ dark }) => {
       }
 
       const data = await response.json()
-      console.log("✓ LeetCode API Data Updated:", data)
+      console.log("✓ LeetCode API Data Fetched:", data)
 
-      setStats({
+      const newStats = {
         totalSolved: data.totalSolved || 4,
         easySolved: data.easySolved || 4,
         mediumSolved: data.mediumSolved || 0,
         hardSolved: data.hardSolved || 0,
         submissionCalendar: data.submissionCalendar || {},
         totalSubmissions: data.totalSubmissions?.[0]?.submissions || 8,
-      })
-      setError(null)
+      }
+
+      if (isMountedRef.current) {
+        setStats(newStats)
+        setError(null)
+        
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(newStats))
+          const now = new Date().toLocaleString()
+          localStorage.setItem(LAST_UPDATE_KEY, now)
+          setLastUpdate(now)
+          console.log("✓ Stats cached to localStorage")
+        } catch (e) {
+          console.warn("⚠️ Could not save to localStorage:", e)
+        }
+      }
     } catch (err) {
       console.error("✗ LeetCode Fetch Error:", err)
-      setError("Failed to update. Using cached data.")
+      if (isMountedRef.current) {
+        setError(`Failed to fetch: ${err.message}`)
+      }
     } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
   }
 
-  // Do NOT auto-fetch on mount - prevents rate limiting
   useEffect(() => {
-    // Component mounted - use initial cached data
-    return () => {}
+    isMountedRef.current = true
+
+    // Fetch immediately on mount
+    fetchStats()
+
+    // Setup auto-polling every 10 minutes
+    pollIntervalRef.current = setInterval(() => {
+      console.log("🔄 Auto-polling LeetCode stats...")
+      fetchStats()
+    }, POLL_INTERVAL)
+
+    // Restore last update time
+    if (typeof window !== "undefined") {
+      try {
+        const savedTime = localStorage.getItem(LAST_UPDATE_KEY)
+        if (savedTime) setLastUpdate(savedTime)
+      } catch {
+        // Ignore localStorage errors
+      }
+    }
+
+    return () => {
+      isMountedRef.current = false
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+      }
+    }
   }, [])
 
   /**
@@ -720,35 +784,92 @@ const LeetCode = ({ dark }) => {
                 </motion.div>
               </motion.div>
 
-              {/* Error Message with Manual Refresh */}
-              {error && (
-                <motion.div
-                  className="mt-6 p-4 rounded-lg text-sm flex items-center justify-between"
-                  style={{
-                    backgroundColor: "rgba(59, 130, 246, 0.1)",
-                    color: "#3b82f6",
-                    borderLeft: "3px solid #3b82f6",
-                  }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <motion.span>ℹ️ {error}</motion.span>
+              {/* Update Status & Manual Refresh Controls */}
+              <motion.div
+                className="mt-8 pt-6 border-t flex flex-col gap-4"
+                style={{ borderColor: dark ? "#1f2937" : "#e5e7eb" }}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                viewport={scrollTriggerConfig}
+              >
+                {/* Last Update Info */}
+                {lastUpdate && (
+                  <motion.div
+                    className="text-xs flex items-center gap-2"
+                    style={{ color: dark ? "#9ca3af" : "#6b7280" }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <span className="text-green-500">●</span>
+                    Last updated: {lastUpdate}
+                    <span className="text-xs ml-1" style={{ color: dark ? "#6b7280" : "#9ca3af" }}>
+                      (Auto-refreshes every 10 min)
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* Error Message */}
+                {error && (
+                  <motion.div
+                    className="p-4 rounded-lg text-sm flex items-center justify-between"
+                    style={{
+                      backgroundColor: "rgba(59, 130, 246, 0.1)",
+                      color: "#3b82f6",
+                      borderLeft: "3px solid #3b82f6",
+                    }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <motion.span>⚠️ {error}</motion.span>
+                    <motion.button
+                      onClick={fetchStats}
+                      disabled={loading}
+                      className="ml-4 px-3 py-1 rounded text-xs font-semibold transition-all hover:opacity-80 disabled:opacity-50"
+                      style={{
+                        backgroundColor: "#3b82f6",
+                        color: "white",
+                      }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {loading ? "Updating..." : "Retry Now"}
+                    </motion.button>
+                  </motion.div>
+                )}
+
+                {/* Manual Refresh Button - Always Visible */}
+                {!error && (
                   <motion.button
                     onClick={fetchStats}
                     disabled={loading}
-                    className="ml-4 px-3 py-1 rounded text-xs font-semibold transition-all hover:opacity-80 disabled:opacity-50"
+                    className="w-full px-6 py-2 rounded-lg font-semibold transition-all text-sm"
                     style={{
-                      backgroundColor: "#3b82f6",
-                      color: "white",
+                      backgroundColor: dark ? "#1f2937" : "#e5e7eb",
+                      color: dark ? "#d1d5db" : "#374151",
+                      opacity: loading ? 0.6 : 1,
                     }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    {loading ? "Updating..." : "Refresh"}
+                    {loading ? (
+                      <motion.span
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        🔄 Fetching latest stats...
+                      </motion.span>
+                    ) : (
+                      <span>🔄 Refresh Stats Now</span>
+                    )}
                   </motion.button>
-                </motion.div>
-              )}
+                )}
+              </motion.div>
 
               {/* Profile Link */}
               <motion.a
