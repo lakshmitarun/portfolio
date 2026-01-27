@@ -24,7 +24,7 @@ import {
  * ✓ Error handling with graceful degradation
  */
 const LeetCode = ({ dark }) => {
-  const POLL_INTERVAL = 10 * 60 * 1000 // 10 minutes
+  const POLL_INTERVAL = 30 * 60 * 1000 // 30 minutes (reduced API calls to avoid rate limiting)
   const CACHE_KEY = "leetcode_stats_cache"
   const LAST_UPDATE_KEY = "leetcode_last_update"
   const username = "P_lakshmi_tarun"
@@ -805,7 +805,7 @@ const LeetCode = ({ dark }) => {
                     <span className="text-green-500">●</span>
                     Last updated: {lastUpdate}
                     <span className="text-xs ml-1" style={{ color: dark ? "#6b7280" : "#9ca3af" }}>
-                      (Auto-refreshes every 10 min)
+                      (Auto-refreshes every 30 min)
                     </span>
                   </motion.div>
                 )}
