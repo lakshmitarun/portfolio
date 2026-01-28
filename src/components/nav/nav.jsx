@@ -18,9 +18,9 @@ const Nav = ({ dark, setDark, onDownloadResume }) => {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300"
+      className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800 transition-colors duration-300"
       style={{
-        backgroundColor: dark ? "rgb(3, 7, 30)" : "white",
+        backgroundColor: "rgb(3, 7, 30)",
       }}
     >
       <div className="w-full px-6 py-3 flex items-center justify-between">
@@ -42,8 +42,8 @@ const Nav = ({ dark, setDark, onDownloadResume }) => {
         <div className="flex items-center gap-6 shrink-0">
 
           {/* Links */}
-          <ul className="hidden md:flex gap-6 text-sm font-medium text-gray-700 dark:text-gray-300"
-              style={{ color: dark ? "#d1d5db" : "#374151" }}>
+          <ul className="hidden md:flex gap-6 text-sm font-medium"
+              style={{ color: "#d1d5db" }}>
             {navItems.map(({ label, id }, index) => (
               <motion.li
                 key={id}
@@ -53,7 +53,7 @@ const Nav = ({ dark, setDark, onDownloadResume }) => {
               >
                 <motion.a
                   href={`#${id}`}
-                  whileHover={{ color: dark ? "#ffffff" : "#000000", scale: 1.05 }}
+                  whileHover={{ color: "#ffffff", scale: 1.05 }}
                   className="transition-colors"
                 >
                   {label}
@@ -84,7 +84,11 @@ const Nav = ({ dark, setDark, onDownloadResume }) => {
             transition={{ delay: 0.35, duration: 0.4 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="w-9 h-9 rounded-full bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 flex items-center justify-center hover:scale-105 transition cursor-pointer"
+            className="w-9 h-9 rounded-full flex items-center justify-center hover:scale-105 transition cursor-pointer"
+            style={{
+              backgroundColor: "#1f2937",
+              color: "#d1d5db"
+            }}
           >
             <motion.div
               initial={{ rotate: 0 }}
