@@ -293,6 +293,41 @@ const LeetCode = ({ dark }) => {
   const maxStreak = calculateMaxStreak()
   const { weeks, monthOrder } = generateCalendar()
 
+  /**
+   * Group weeks by month for visual separation
+   */
+  const groupWeeksByMonth = () => {
+    const monthGroups = []
+    let currentMonth = null
+    let currentGroup = []
+
+    weeks.forEach((week) => {
+      const weekMonth = week[0]?.date ? new Date(week[0].date).getMonth() : null
+      
+      if (weekMonth !== currentMonth && currentGroup.length > 0) {
+        monthGroups.push({
+          month: currentMonth,
+          weeks: currentGroup,
+        })
+        currentGroup = []
+      }
+
+      currentMonth = weekMonth
+      currentGroup.push(week)
+    })
+
+    if (currentGroup.length > 0) {
+      monthGroups.push({
+        month: currentMonth,
+        weeks: currentGroup,
+      })
+    }
+
+    return monthGroups
+  }
+
+  const monthGroups = groupWeeksByMonth()
+
   return (
     <motion.section
       id="leetcode"
@@ -644,7 +679,7 @@ const LeetCode = ({ dark }) => {
                   style={{
                     display: "flex",
                     alignItems: "flex-end",
-                    gap: "4px",
+                    gap: "12px",
                     overflowX: "auto",
                     paddingBottom: "20px",
                   }}
@@ -656,7 +691,7 @@ const LeetCode = ({ dark }) => {
                       flexDirection: "column",
                       justifyContent: "space-between",
                       paddingRight: "8px",
-                      minHeight: "104px",
+                      minHeight: "120px",
                     }}
                   >
                     {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
@@ -677,74 +712,99 @@ const LeetCode = ({ dark }) => {
                     )}
                   </div>
 
-                  {/* Calendar weeks */}
-                  <div style={{ display: "flex", gap: "2px" }}>
-                    {weeks.map((week, weekIdx) => (
-                      <div
-                        key={`week-${weekIdx}`}
-                        style={{ display: "flex", flexDirection: "column", gap: "2px" }}
-                      >
-                        {week.map((day, dayIdx) => (
-                          <div
-                            key={`${day?.timestamp || `empty-${weekIdx}-${dayIdx}`}`}
-                            title={
-                              day
-                                ? `${day.date}: ${day.submissions} ${day.submissions === 1 ? "submission" : "submissions"}`
-                                : "No data"
-                            }
-                            style={{
-                              width: "14px",
-                              height: "14px",
-                              backgroundColor: day
-                                ? getColor(day.submissions)
-                                : "transparent",
-                              borderRadius: "2px",
-                              cursor: day ? "pointer" : "default",
-                              transition: "all 0.2s ease",
-                              border: day && day.submissions > 0 ? "1px solid rgba(255,255,255,0.2)" : "none",
-                            }}
-                            onMouseEnter={(e) => {
-                              if (day && day.submissions > 0) {
-                                e.target.style.opacity = "0.8"
-                                e.target.style.boxShadow = "0 0 4px rgba(16, 185, 129, 0.5)"
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.opacity = "1"
-                              e.target.style.boxShadow = "none"
-                            }}
-                          />
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                  {/* Calendar months with visual boxes */}
+                  {monthGroups.map((group, groupIdx) => {
+                    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                    const monthLabel = group.month !== null ? monthNames[group.month] : ""
 
-                {/* Month labels */}
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "2px",
-                    marginTop: "8px",
-                    marginLeft: "28px",
-                  }}
-                >
-                  {monthOrder.map((month, idx) => (
-                    <div
-                      key={idx}
-                      style={{ width: "54px", textAlign: "center" }}
-                    >
-                      <span
-                        className="text-xs"
+                    return (
+                      <div
+                        key={`month-group-${groupIdx}`}
                         style={{
-                          color: dark ? "#9ca3af" : "#6b7280",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "4px",
                         }}
                       >
-                        {month}
-                      </span>
-                    </div>
-                  ))}
+                        {/* Month Label */}
+                        <div
+                          style={{
+                            height: "20px",
+                            display: "flex",
+                            alignItems: "center",
+                            paddingLeft: "4px",
+                          }}
+                        >
+                          <span
+                            className="text-xs font-semibold"
+                            style={{
+                              color: dark ? "#d1d5db" : "#374151",
+                            }}
+                          >
+                            {monthLabel}
+                          </span>
+                        </div>
+
+                        {/* Month Box */}
+                        <div
+                          style={{
+                            padding: "8px",
+                            borderRadius: "6px",
+                            backgroundColor: dark ? "rgba(31, 41, 55, 0.5)" : "rgba(243, 244, 246, 0.5)",
+                            border: `1px solid ${dark ? "#374151" : "#e5e7eb"}`,
+                            display: "flex",
+                            gap: "2px",
+                          }}
+                        >
+                          {/* Calendar weeks for this month */}
+                          <div style={{ display: "flex", gap: "2px" }}>
+                            {group.weeks.map((week, weekIdx) => (
+                              <div
+                                key={`week-${groupIdx}-${weekIdx}`}
+                                style={{ display: "flex", flexDirection: "column", gap: "2px" }}
+                              >
+                                {week.map((day, dayIdx) => (
+                                  <div
+                                    key={`${day?.timestamp || `empty-${groupIdx}-${weekIdx}-${dayIdx}`}`}
+                                    title={
+                                      day
+                                        ? `${day.date}: ${day.submissions} ${day.submissions === 1 ? "submission" : "submissions"}`
+                                        : "No data"
+                                    }
+                                    style={{
+                                      width: "14px",
+                                      height: "14px",
+                                      backgroundColor: day
+                                        ? getColor(day.submissions)
+                                        : "transparent",
+                                      borderRadius: "2px",
+                                      cursor: day ? "pointer" : "default",
+                                      transition: "all 0.2s ease",
+                                      border: day && day.submissions > 0 ? "1px solid rgba(255,255,255,0.2)" : "none",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (day && day.submissions > 0) {
+                                        e.target.style.opacity = "0.8"
+                                        e.target.style.boxShadow = "0 0 4px rgba(16, 185, 129, 0.5)"
+                                      }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.target.style.opacity = "1"
+                                      e.target.style.boxShadow = "none"
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
+
+                {/* Month labels row - removed as it's now integrated in boxes */}
+
 
                 {/* Legend */}
                 <motion.div
