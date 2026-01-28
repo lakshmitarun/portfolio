@@ -18,7 +18,10 @@ const Nav = ({ dark, setDark, onDownloadResume }) => {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300"
+      className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300"
+      style={{
+        backgroundColor: dark ? "rgb(3, 7, 30)" : "white",
+      }}
     >
       <div className="w-full px-6 py-3 flex items-center justify-between">
 
@@ -39,7 +42,8 @@ const Nav = ({ dark, setDark, onDownloadResume }) => {
         <div className="flex items-center gap-6 shrink-0">
 
           {/* Links */}
-          <ul className="hidden md:flex gap-6 text-sm font-medium text-gray-700 dark:text-gray-300">
+          <ul className="hidden md:flex gap-6 text-sm font-medium text-gray-700 dark:text-gray-300"
+              style={{ color: dark ? "#d1d5db" : "#374151" }}>
             {navItems.map(({ label, id }, index) => (
               <motion.li
                 key={id}
