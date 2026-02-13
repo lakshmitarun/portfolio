@@ -61,19 +61,54 @@ const achievements = [
     year: "2025",
     downloadFile: "/certificates/java-fullstack-eduskills.jpeg"
   },
+  {
+    title: "NVIDIA Certificate",
+    description:
+      "Completed NVIDIA certification program demonstrating expertise and proficiency in NVIDIA technologies and best practices.",
+    year: "2025",
+    downloadFile: "/certificates/NVIDA_TARUN_CERTIFICATE.pdf"
+  },
 ]
 
 const Achievements = ({ dark }) => {
   const downloadAll = () => {
     achievements.forEach((item) => {
-      const fileName = item.downloadFile.split("/").pop().replace(/\.[^/.]+$/, ".pdf")
-      convertImageToPDF(item.downloadFile, fileName)
+      const fileName = item.downloadFile.split("/").pop()
+      const fileExtension = fileName.split(".").pop().toLowerCase()
+      
+      if (fileExtension === "pdf") {
+        // Direct download for PDF files
+        const link = document.createElement("a")
+        link.href = item.downloadFile
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      } else {
+        // Convert image to PDF
+        const pdfFileName = fileName.replace(/\.[^/.]+$/, ".pdf")
+        convertImageToPDF(item.downloadFile, pdfFileName)
+      }
     })
   }
 
   const handleSingleDownload = (item) => {
-    const fileName = item.downloadFile.split("/").pop().replace(/\.[^/.]+$/, ".pdf")
-    convertImageToPDF(item.downloadFile, fileName)
+    const fileName = item.downloadFile.split("/").pop()
+    const fileExtension = fileName.split(".").pop().toLowerCase()
+    
+    if (fileExtension === "pdf") {
+      // Direct download for PDF files
+      const link = document.createElement("a")
+      link.href = item.downloadFile
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } else {
+      // Convert image to PDF
+      const pdfFileName = fileName.replace(/\.[^/.]+$/, ".pdf")
+      convertImageToPDF(item.downloadFile, pdfFileName)
+    }
   }
 
   return (
