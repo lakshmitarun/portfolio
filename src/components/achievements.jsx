@@ -68,6 +68,13 @@ const achievements = [
     year: "2025",
     downloadFile: "/certificates/NVIDA_TARUN_CERTIFICATE.pdf"
   },
+  {
+    title: "MERN Full Stack Development With Project Virtual Internship",
+    description:
+      "Successfully completed MERN Full Stack Development With Project Virtual Internship program covering MongoDB, Express.js, React, and Node.js with hands-on project experience.",
+    year: "2025",
+    downloadFile: "/certificates/MERN full Stack Development With Project Virtual Internship.pdf"
+  },
 ]
 
 const Achievements = ({ dark }) => {
